@@ -393,6 +393,18 @@ NB: Dilarang menggunakan crontab dan tidak memakai argumen ketika menjalankan pr
 ```
 
 ```
-*
-*
+Program yg menghentikan program soal5.c
+```
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <signal.h>
+
+int main() {
+	char *kill_argv[]={"pkill", "soal5", NULL};
+	execv("/usr/bin/pkill",kill_argv);
+}
+```
+* Kesulitan : tidak cukup waktu dan belum mengerti
+
 
