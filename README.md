@@ -84,9 +84,11 @@ int main() {
   	exit(EXIT_SUCCESS);
 }
 ```
-* Compile dengan mengetikkan gcc -o nomor1_fix nomor1_fix.c 
-* Jalankan dengan ./nomor1_fix
-* Karena menggunakan daemon, file png yang berada di dalam folder modul2 otomatis akan berpindah ke modul2/gambar dengan penambahan "_grey" pada nama file nya.
+* Buka direktori tempat file png berada.
+* Mencari dan menyimpan nama file pada direktori tersebut yang memiliki ekstensi .png 
+* Nama file baru ditambahkan dengan _grey.png setelah nama file lama dihapus .png nya
+* Menambahkan destination path pada nama file baru, juga menambahkan source path pada nama file lama
+* Rename source menjadi dest agar file png berpindah ke direktori tujuan dengan penambahan _grey pada nama file nya.
 
 
 ## Soal 2
@@ -96,10 +98,72 @@ Catatan: Tidak boleh menggunakan crontab
 
 ### Jawaban :
 ```
+include <sys/types.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <unistd.h>
+#include <syslog.h>
+#include <string.h>
+#include <pwd.h>
+#include <grp.h>
 
+
+int main() {
+    	pid_t pid, sid;
+
+  	pid = fork();
+
+  	if (pid < 0) {
+		exit(EXIT_SUCCESS);
+  	}
+
+  	umask(0);
+
+  	sid = setsid();
+
+  	if (sid < 0) {
+    		exit(EXIT_FAILURE);
+  	}
+
+  	if ((chdir("/")) < 0) {
+    		exit(EXIT_FAILURE);
+  	}
+
+	close(STDIN_FILENO);
+  	close(STDOUT_FILENO);
+  	close(STDERR_FILENO);
+    	while(1){
+    		struct stat ss;
+    		char bro[100] = "/home/boy/hatiku/elen.ku";
+		
+		stat(bro, &ss);
+    		struct passwd *pw = getpwuid(ss.st_uid);
+    		struct group  *gr = getgrgid(ss.st_gid);
+
+		if((strcmp(pw->pw_name, "www-data") == 0) && (strcmp(gr->gr_name, "www-data") ==0))
+
+      		{
+     			remove(bro);
+      		}
+
+      		char mode[] = "0777";
+      		int i;
+		i = strtol (mode, 0, 8);
+      		chmod(bro,i);
+     		sleep(3);
+    		}
+   	exit(EXIT_SUCCESS);
+}
 ```
-*
-*
+* Membuat direktori hatiku dan membuat file elen.ku dengan menggunakan touch. 
+* Mencari tahu owner dan group dari file elen.ku.
+* Membuat struct dan menyimpan user id owner dan group di dalam struct tersebut.
+* Membandingkan user id owner dan user id group www-data. Jika sama, maka file elen.ku akan dihapus. 
+* Untuk mengubah permission menjadi 777 (dalam oktal) maka kita perlu mengubah string "0777" ke dalam oktal menggunakan strtol. 
+* Selanjutnya, chmod.
 
 
 ## Soal 3
@@ -116,10 +180,110 @@ Catatan:
 
 ### Jawaban :
 ```
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
 
+int main() {
+        pid_t child_id;
+        pid_t child_id2;
+        pid_t child_id3;
+        pid_t child_id4;
+        int status;
+
+        child_id = fork();
+
+        if (child_id < 0) {
+                exit(EXIT_FAILURE);
+        }
+
+        if (child_id == 0) {
+                char *argv[3] = {"unzip", "campur2.zip", NULL};
+                execv("/usr/bin/unzip", argv);
+        }
+        else {
+                child_id2 = fork();
+
+                if (child_id2 < 0) {
+                        exit(EXIT_FAILURE);
+                }
+
+                if (child_id2 == 0) {
+                        char *argv[3] = {"touch", "daftar.txt", NULL};
+                        execv("/usr/bin/touch", argv);
+
+                }
+                else {
+                        while ((wait(&status))> 0);
+                        FILE *out_file = fopen("daftar.txt","w");
+
+                        char *ls[3] = {"ls", "campur2", NULL};
+                        char *grep[3] = {"grep", ".*.txt$", NULL};
+
+                        int A[2], B[2];
+			int output;
+                        char abcde[5000];
+
+                        pipe(A);
+                        pipe(B);
+
+                        if (pipe(A) < 0){ 
+                                exit(EXIT_FAILURE);
+                        }
+
+                        if (pipe(B) < 0){
+                                exit(EXIT_FAILURE);
+                        }
+
+                        child_id3 = fork();
+
+                        if (child_id3 < 0) {
+                                exit(EXIT_FAILURE);
+                        }
+
+                        if (child_id3 == 0) {
+                                dup2(A[1], 1);
+				close(A[0]);
+                                close(A[1]);
+
+                                execvp ("ls", ls);
+                        }
+                        else {
+                                child_id4 = fork ();
+
+                                if (child_id4 == 0){
+                                        dup2(A[0], 0);
+                                        dup2(B[1], 1);
+
+                                        close(A[1]);
+                                        close(A[0]);
+                                        close(B[1]);
+                                        close(B[0]);
+
+                                        execvp("grep", grep);
+                                }
+                                else {
+                                        close(B[1]);
+                                        close(A[1]);
+					close(A[0]);
+
+                                        output = read(B[0], abcde, sizeof(abcde));
+                                        fprintf(out_file, "%.*s\n", output, abcde);
+                                }
+                        }
+			fclose(out_file);
+                }
+        }
+}
 ```
-*
-*
+* Buat file daftar.txt menggunakan touch.
+* Unzip file campur2.zip
+* Melihat file apa saja yang berada dalam folder campur2 menggunakan ls.
+* Mendapatkan file-file yang berekstensi .txt menggunakan grep.
+* Print hasil grep ke dalam file daftar.txt
 
 
 ## Soal 4
