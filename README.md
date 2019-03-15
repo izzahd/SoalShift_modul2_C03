@@ -86,7 +86,7 @@ int main() {
 ```
 * Compile dengan mengetikkan gcc -o nomor1_fix nomor1_fix.c 
 * Jalankan dengan ./nomor1_fix
-* Karena menggunakan daemon, file png yang berada di dalam folder modul2 otomatis akan berpindah ke modul2/gambar dengan penambahan nama file "_grey"
+* Karena menggunakan daemon, file png yang berada di dalam folder modul2 otomatis akan berpindah ke modul2/gambar dengan penambahan "_grey" pada nama file nya.
 
 
 ##Soal 2
