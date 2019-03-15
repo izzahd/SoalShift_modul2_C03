@@ -109,10 +109,10 @@ Buatlah program C yang dapat :
 i)  mengekstrak file zip tersebut.
 ii) menyimpan daftar file dari folder “campur2” yang memiliki ekstensi .txt ke dalam file daftar.txt. 
 Catatan:  
-○	Gunakan fork dan exec.
-○	Gunakan minimal 3 proses yang diakhiri dengan exec.
-○	Gunakan pipe
-○	Pastikan file daftar.txt dapat diakses dari text editor
+* Gunakan fork dan exec.
+* Gunakan minimal 3 proses yang diakhiri dengan exec.
+* Gunakan pipe
+* Pastikan file daftar.txt dapat diakses dari text editor
 
 ### Jawaban :
 ```
